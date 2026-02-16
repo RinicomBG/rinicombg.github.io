@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earthquake Impact Estimator</title>
+
+<style>
+	:root {
+		--bg-page: #081421;
+		--bg-section: #10283f;
+		--bg-card: #173a5c;
+		--text-main: #ffffff;
+		--text-secondary: #9bb3c9;
+		--badge-default: #163553;
+		--badge-blue: #1b4c7a;
+		--badge-orange: #4a2b12;
+		--badge-blue-text: #7ec8ff;
+		--badge-orange-text: #ff9d42;
+		--progress-track-alt: #163A24;
+		--progress-track: #2c4b70;
+		--progress-good: #1faa59;
+		--progress-warning: #c48a1d;
+		--progress-danger: #b6463a;
+		--progress-other: #1b7fc1;
+
+		--card-border-good: #1faa59;
+		--card-border-warning: #c48a1d;
+		--card-border-danger: #b6463a;
+		--card-border-none: #173a5c;
+	}
+
+	@font-face {
+		font-family: 'Inter';
+		src: url('res/inter/Inter-Regular.woff2') format('woff2');
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+	
+	@font-face {
+		font-family: 'Inter';
+		src: url('res/inter/Inter-Bold.woff2') format('woff2');
+		font-weight: 700;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: 'Inter-Display';
+		src: url('res/inter/InterDisplay-Regular.woff2') format('woff2');
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+	
+	@font-face {
+		font-family: 'Inter-Display';
+		src: url('res/inter/InterDisplay-Bold.woff2') format('woff2');
+		font-weight: 700;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	body {
+		margin: 0;
+		min-height: 100vh;
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		padding: 20px;
+		background: var(--bg-page);
+		font-family: Inter-Display, sans-serif;
+		color: var(--text-main);
+	}
+
+	.container {
+		background: var(--bg-section);
+		padding: 24px;
+		border-radius: 20px;
+		width: 100%;
+		max-width: 1200px;
+		box-sizing: border-box;
+	}
+
+	.header {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 16px;
+		gap: 10px;
+	}
+
+	.title {
+		font-size: 26px;
+		font-weight: 600;
+		color: var(--text-main);
+	}
+
+	.badges {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.badge {
+		padding: 4px 10px;
+		border-radius: 999px;
+		font-size: 12px;
+		font-weight: 500;
+		background: var(--badge-default);
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	.badge span {
+		font-size: 14px;
+		font-weight: 700;
+		color: var(--text-main);
+	}
+
+	.badge.blue {
+		background: var(--badge-blue);
+		color: var(--badge-blue-text);
+	}
+
+	.badge.orange {
+		background: var(--badge-orange);
+		color: var(--badge-orange-text);
+	}
+
+	.grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		justify-content: center;
+	}
+
+	.grid-section {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 12px;
+		/* margin-top: 24px; */
+		padding: 0;
+	}
+	
+	.grid-item {
+		background: transparent;
+		padding: 16px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+	}
+	
+	.grid-item.big {
+		grid-column: span 2;
+	}
+	
+	@media (max-width: 800px) {
+		.grid-section {
+			grid-template-columns: 1fr;
+		}
+		.grid-item.big {
+			grid-column: span 1;
+		}
+	}
+
+	.card {
+		flex: 0 0 350px;
+		height: 120px;
+		background: var(--bg-card);
+		border-radius: 16px;
+		padding: 10px 14px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		box-sizing: border-box;
+		border-width: 5px;
+		border-style: solid;
+		border-color: var(--card-border-none);
+	}
+
+	.card-wide {
+		background: var(--bg-card);
+		border-radius: 16px;
+		padding: 10px 14px;
+		border-width: 5px;
+		border-style: solid;
+		border-color: var(--card-border-none);
+		width: 100%;
+	}
+
+	.card-title {
+		font-size: 18px;
+		color: var(--text-secondary);
+		font-weight: 500;
+		margin-bottom: 4px;
+		text-align: center;
+	}
+
+	.card-main {
+		font-size: 36px;
+		font-weight: 700;
+		color: var(--text-main);
+		margin-bottom: 4px;
+		text-align: center;
+	}
+
+	.card-note {
+		font-size: 16px;
+		color: var(--text-secondary);
+		text-align: center;
+	}
+
+	/* Card header: title left, value right */
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	.card-title-left {
+		font-size: 18px;
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.card-title-left-major {
+		font-size: 24px;
+		color: var(--text-main);
+		font-weight: 700;
+	}
+
+	.card-value-right {
+		font-size: 24px;
+		font-weight: 700;
+		color: var(--text-main);
+	}
+
+	.card-paragraph-text {
+		margin: 10px;
+		font-size: 16px;
+		color: var(--text-secondary);
+		text-align: left;
+	}
+
+	.progress-bar {
+		width: 100%;
+		height: 10px;
+		background: var(--progress-track);
+		border-radius: 8px;
+		overflow: hidden;
+		margin-bottom: 4px;
+	}
+
+	.progress-fill {
+		height: 100%;
+		border-radius: 8px 0 0 8px;
+	}
+
+	@media (max-width: 800px) {
+		.card {
+			flex: 0 0 45%;
+		}
+	}
+
+	@media (max-width: 500px) {
+		.card {
+			flex: 0 0 100%;
+		}
+	}
+</style>
+
+<script>
+  var drawALine = function() {
+	  const svge = document.querySelector("svg");
+const width = svg.clientWidth;
+const height = svg.clientHeight;
+
+	  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+	  console.log("width and height", width, height);
+
+const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+line.setAttribute("x1", 0);
+line.setAttribute("y1", 0);
+line.setAttribute("x2", width);
+line.setAttribute("y2", height);
+line.setAttribute("stroke", "black");
+
+	  svg.appendChild(line);}
+
+</script>
+<script>
+
+const onloadedfunction = function() {
+	// -------------------------------
+	// Configurable Colors & Sizes
+	// -------------------------------
+	const colors = (function() {
+		var root = document.documentElement;
+		var line = '#0074d9';
+		var axis = '#111111';
+		axis = getComputedStyle(root).getPropertyValue('--text-secondary').trim();
+		var ticks = '#555555';
+		ticks = getComputedStyle(root).getPropertyValue('--text-secondary').trim();
+		var background = 'transparent';
+		return {
+			line: line,
+			axis: axis,
+			ticks: ticks,
+			background: background
+		};
+	})();
+
+	// -------------------------------
+	// Sample Input Data (20 points)
+	// -------------------------------
+	let data = Array.from({length: 21}, (_, i) => ({
+		x: i,
+		y: Math.floor(Math.random() * 100)
+	}));
+
+  const svg = document.getElementById('chart');
+
+	// Reset coordiates for chart drawing.
+	const width = svg.clientWidth;
+	const height = svg.clientHeight;
+
+	svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+	while (svg.firstChild) {
+		svg.removeChild(svg.firstChild);
+	}
+
+
+	const chartConfig = {
+		width: width,
+		height: height,
+		margin: { top: 30, right: 30, bottom: 70, left: 50 },
+		tickLength: 10
+	};
+
+	// -------------------------------
+	// Utility Functions
+	// -------------------------------
+	function scale(value, domainMin, domainMax, rangeMin, rangeMax) {
+		return ((value - domainMin) / (domainMax - domainMin)) * (rangeMax - rangeMin) + rangeMin;
+	}
+
+  // -------------------------------
+  // Draw Axes and Ticks
+  // -------------------------------
+  function drawAxes() {
+    // Remove existing axes group if present
+    let oldAxes = svg.querySelector('#axes');
+    if (oldAxes) svg.removeChild(oldAxes);
+
+    const axesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    axesGroup.id = 'axes';
+
+    const { width, height, margin, tickLength } = chartConfig;
+
+    // X axis line
+    const xAxis = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    xAxis.setAttribute('x1', margin.left);
+    xAxis.setAttribute('y1', height - margin.bottom);
+    xAxis.setAttribute('x2', width - margin.right);
+    xAxis.setAttribute('y2', height - margin.bottom);
+    xAxis.setAttribute('stroke', colors.axis);
+    xAxis.setAttribute('stroke-width', 2);
+    axesGroup.appendChild(xAxis);
+
+    // Y axis line
+    const yAxis = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+    yAxis.setAttribute('x1', margin.left);
+    yAxis.setAttribute('y1', margin.top);
+    yAxis.setAttribute('x2', margin.left);
+    yAxis.setAttribute('y2', height - margin.bottom);
+    yAxis.setAttribute('stroke', colors.axis);
+    yAxis.setAttribute('stroke-width', 2);
+    axesGroup.appendChild(yAxis);
+
+    // Ticks
+    const maxX = Math.max(...data.map(d => d.x));
+    const maxY = Math.max(...data.map(d => d.y));
+
+    for (let i = 0; i <= maxX; i += 1) {
+      const x = scale(i, 0, maxX, margin.left, width - margin.right);
+      const y = height - margin.bottom;
+    
+      // Tick line
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+      tick.setAttribute('x1', x);
+      tick.setAttribute('y1', y);
+      tick.setAttribute('x2', x);
+      tick.setAttribute('y2', y + tickLength);
+      tick.setAttribute('stroke', colors.ticks);
+      axesGroup.appendChild(tick);
+    
+      // Tick label (rotated 45°)
+      const label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+      label.textContent = (i * 1000);
+      label.setAttribute('x', x);
+      label.setAttribute('y', y + tickLength + 5);
+    
+      // Rotate -45 degrees around the label position
+      label.setAttribute('transform', `rotate(-45 ${x} ${y + tickLength + 5})`);
+    
+      // Align text so the top-right corner is near the tick
+      label.setAttribute('text-anchor', 'end');
+      label.setAttribute('dominant-baseline', 'hanging');
+    
+      label.setAttribute('fill', colors.ticks);
+      label.setAttribute('font-size', '14');
+    
+      axesGroup.appendChild(label);
+    }
+    
+    // Add X axis label
+    const xAxisLabel = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    xAxisLabel.textContent = 'Time'; // change this to whatever your X axis represents
+    xAxisLabel.setAttribute('x', (margin.left + width - margin.right) / 2); // center horizontally
+    xAxisLabel.setAttribute('y', height - margin.bottom + 60); // below ticks
+    xAxisLabel.setAttribute('text-anchor', 'middle'); // center alignment
+    xAxisLabel.setAttribute('dominant-baseline', 'middle');
+    xAxisLabel.setAttribute('fill', colors.axis);
+    xAxisLabel.setAttribute('font-size', '16');
+    axesGroup.appendChild(xAxisLabel);
+    
+    for (let i = 0; i <= maxY; i += 10) {
+      const y = scale(i, 0, maxY, height - margin.bottom, margin.top);
+    
+      // Tick line
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+      tick.setAttribute('x1', margin.left - tickLength);
+      tick.setAttribute('y1', y);
+      tick.setAttribute('x2', margin.left);
+      tick.setAttribute('y2', y);
+      tick.setAttribute('stroke', colors.ticks);
+      axesGroup.appendChild(tick);
+    
+      // Tick label (numeric value)
+      const label = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+      label.textContent = i; // show numeric value
+      label.setAttribute('x', margin.left - tickLength - 5); // place left of tick
+      label.setAttribute('y', y);
+      label.setAttribute('text-anchor', 'end'); // right-aligned
+      label.setAttribute('dominant-baseline', 'middle'); // vertically centered
+      label.setAttribute('fill', colors.ticks);
+      label.setAttribute('font-size', '14');
+      axesGroup.appendChild(label);
+    }
+    
+    // Add Y axis label
+    const yAxisLabel = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+    yAxisLabel.textContent = 'Value';
+    yAxisLabel.setAttribute('x', margin.left - 40); // offset from axis
+    yAxisLabel.setAttribute('y', height / 2); // center vertically
+    yAxisLabel.setAttribute('text-anchor', 'middle');
+    yAxisLabel.setAttribute('dominant-baseline', 'middle');
+    yAxisLabel.setAttribute('fill', colors.axis);
+    yAxisLabel.setAttribute('font-size', '16');
+    yAxisLabel.setAttribute('transform', `rotate(-90 ${margin.left - 40} ${height / 2})`); // rotate label vertically
+    axesGroup.appendChild(yAxisLabel);
+
+/*
+    for (let i = 0; i <= maxX; i += 1) {
+      const x = scale(i, 0, maxX, margin.left, width - margin.right);
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+      tick.setAttribute('x1', x);
+      tick.setAttribute('y1', height - margin.bottom);
+      tick.setAttribute('x2', x);
+      tick.setAttribute('y2', height - margin.bottom + tickLength);
+      tick.setAttribute('stroke', colors.ticks);
+      axesGroup.appendChild(tick);
+    }
+
+    for (let i = 0; i <= maxY; i += 10) {
+      const y = scale(i, 0, maxY, height - margin.bottom, margin.top);
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", 'line');
+      tick.setAttribute('x1', margin.left - tickLength);
+      tick.setAttribute('y1', y);
+      tick.setAttribute('x2', margin.left);
+      tick.setAttribute('y2', y);
+      tick.setAttribute('stroke', colors.ticks);
+      axesGroup.appendChild(tick);
+    }
+*/
+
+    svg.appendChild(axesGroup);
+  }
+
+  // -------------------------------
+  // Draw Line Chart
+  // -------------------------------
+  function drawLine() {
+    // Remove old line if present
+    let oldLine = svg.querySelector('#line');
+    if (oldLine) svg.removeChild(oldLine);
+
+    const lineGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    lineGroup.id = 'line';
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", 'path');
+
+    const { width, height, margin } = chartConfig;
+    const maxX = Math.max(...data.map(d => d.x));
+    const maxY = Math.max(...data.map(d => d.y));
+
+    let d = '';
+    data.forEach((point, index) => {
+      const x = scale(point.x, 0, maxX, margin.left, width - margin.right);
+      const y = scale(point.y, 0, maxY, height - margin.bottom, margin.top);
+      d += (index === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', colors.line);
+    path.setAttribute('stroke-width', 2);
+
+    lineGroup.appendChild(path);
+    svg.appendChild(lineGroup);
+  }
+
+  // -------------------------------
+  // Remove Ticks
+  // -------------------------------
+  function removeTicks() {
+    const axesGroup = svg.querySelector('#axes');
+    if (!axesGroup) return;
+    const ticks = axesGroup.querySelectorAll('line');
+    ticks.forEach((tick, index) => {
+      // Keep the first two lines (x & y axes) and remove the rest
+      if (index > 1) axesGroup.removeChild(tick);
+    });
+  }
+
+  // -------------------------------
+  // Initial Rendering
+  // -------------------------------
+  drawAxes();
+  drawLine();
+
+  // -------------------------------
+  // Live Update Example
+  // -------------------------------
+	/*
+  document.getElementById('updateData').addEventListener('click', () => {
+    // Generate new random data
+    data = Array.from({length: 20}, (_, i) => ({
+      x: i + 1,
+      y: Math.floor(Math.random() * 100)
+    }));
+    drawLine();
+  });
+
+  document.getElementById('removeTicks').addEventListener('click', () => {
+    removeTicks();
+  });
+	*/
+
+};
+
+document.addEventListener('DOMContentLoaded', onloadedfunction);
+
+
+</script>
+</head>
+
+<body>
+
+<div class="container">
+
+	<div class="header">
+		<div class="title">Earthquake Impact Estimator</div>
+		<div class="badges">
+			<div class="badge">M: <span>6</span></div>
+			<div class="badge">Pop: <span>3,168,000</span></div>
+			<div class="badge">Distance: <span>30</span>km</div>
+			<div class="badge">Depth: <span>10</span>km</div>
+			<div class="badge">Collapse: <span>2</span>%</div>
+		</div>
+	</div>
+
+	<div class="grid">
+		<div class="card">
+			<div class="card-title">Hypocentral Distance</div>
+			<div class="card-main">36.1</div>
+			<div class="card-note">km</div>
+		</div>
+
+		<div class="card">
+			<div class="card-title">Computed PGA</div>
+			<div class="card-main">0.031</div>
+			<div class="card-note">g</div>
+		</div>
+
+		<div class="card">
+			<div class="card-title">Expected Injured</div>
+			<div class="card-main">2,065</div>
+			<div class="card-note">persons</div>
+		</div>
+
+		<div class="card">
+			<div class="card-title">Orthopedic Patients</div>
+			<div class="card-main">1,797</div>
+			<div class="card-note">~87% of injured</div>
+		</div>
+
+		<div class="card" style="border-color: var(--card-border-warning);">
+			<div class="card-title">Surgeries required</div>
+			<div class="card-main">1,436</div>
+			<div class="card-note">initial phase</div>
+		</div>
+
+		<div class="card" style="border-color: var(--card-border-danger);">
+			<div class="card-header">
+				<div class="card-title-left">ICU Beds Requred</div>
+				<div class="card-value-right">311</div>
+			</div>
+			<div class="progress-bar">
+				<div class="progress-fill" style="width: 75%; background: var(--progress-danger);"></div>
+			</div>
+			<div class="card-note">75% of total capacity</div>
+		</div>
+
+	</div>
+
+	<div class="grid-section">
+		<div class="grid-item">
+			<div style="background: var(--bg-card); border-radius: 16px; width: 100%; padding: 5px;">
+				<h1 style="margin-top: 4px; margin-bottom: 8px; margin-left: 16px;">Orthopedic Patients</h1>
+				<div class="grid-item" style="display: flex; flex-direction: column; background: var(--bg-section); border-radius: 16px; padding: 10px; align-items: stretch; justify-content: flex-start;">
+					<div class="card" style="flex: 0 0 auto; height: 80px;">
+						<div class="card-header">
+							<div class="card-title-left">Fracture</div>
+							<div class="card-value-right">1,168</div>
+						</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: 65%; background: var(--progress-other);"></div>
+						</div>
+					</div>
+					<div class="card" style="flex: 0 0 auto; height: 80px;">
+						<div class="card-header">
+							<div class="card-title-left">Crush Injury</div>
+							<div class="card-value-right">234</div>
+						</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: 13%; background: var(--progress-other);"></div>
+						</div>
+					</div>
+					<div class="card" style="flex: 0 0 auto; height: 80px;">
+						<div class="card-header">
+							<div class="card-title-left">Compartment Syndrome</div>
+							<div class="card-value-right">137</div>
+						</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: 8%; background: var(--progress-other);"></div>
+						</div>
+					</div>
+					<div class="card" style="flex: 0 0 auto; height: 80px;">
+						<div class="card-header">
+							<div class="card-title-left">Major Soft Tissue</div>
+							<div class="card-value-right">131</div>
+						</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: 7%; background: var(--progress-other);"></div>
+						</div>
+					</div>
+					<div class="card" style="flex: 0 0 auto; height: 80px;">
+						<div class="card-header">
+							<div class="card-title-left">Crush Syndrome</div>
+							<div class="card-value-right">127</div>
+						</div>
+						<div class="progress-bar">
+							<div class="progress-fill" style="width: 7%; background: var(--progress-other);"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="grid-item">
+
+			<div style="background: var(--bg-card); border-radius: 16px; width: 100%; padding: 5px;">
+				<h1 style="margin-top: 4px; margin-bottom: 8px; margin-left: 16px;">Medical Resources</h1>
+				<div class="grid-item" style="display: flex; flex-direction: column; background: var(--bg-section); border-radius: 16px; padding: 10px; align-items: stretch; justify-content: flex-start;">
+
+			<!-- p style="color: var(--text-secondary); width: 100%; text-align: center;">Right column cell 2</p -->
+			<div class="card" style="flex: 0 0 auto;">
+				<div class="card-header">
+					<div class="card-title-left">Surgeries required</div>
+					<div class="card-value-right">1436</div>
+				</div>
+				<div class="progress-bar">
+					<div class="progress-fill" style="width: 65%; background: var(--progress-other);"></div>
+				</div>
+				<!-- div class="card-note">
+					Normal range between 25 and 75%
+				</div -->
+			</div>
+			<div class="card" style="border-color: var(--progress-danger); flex: 0 0 auto;">
+				<div class="card-header">
+					<div class="card-title-left">ICU beds required</div>
+					<div class="card-value-right">311</div>
+				</div>
+				<div class="progress-bar">
+					<div class="progress-fill" style="width: 18%; background: var(--progress-danger);"></div>
+				</div>
+				<!-- div class="card-note">
+					Normal range between 25 and 75%
+				</div -->
+			</div>
+			<div class="card" style="border-color: var(--progress-warning); flex: 0 0 auto;">
+				<div class="card-header">
+					<div class="card-title-left">Dialysis patients</div>
+					<div class="card-value-right">127</div>
+				</div>
+				<div class="progress-bar">
+					<div class="progress-fill" style="width: 8%; background: var(--progress-warning);"></div>
+				</div>
+				<!-- div class="card-note">
+					Normal range between 25 and 75%
+				</div -->
+			</div>
+
+				</div>
+			</div>
+
+		</div>
+		<div class="grid-item big">
+			<div class="card-wide">
+				<div class="card-header">
+				<div class="card-title-left-major">Population Over Time</div>
+				<div class="card-value-right">-294M</div>
+				</div>
+				<svg width="100%" height="400" viewBox="0 0 150 150" id="chart">
+<circle cx="75" cy="75" r="60" fill="#1b4c7a" />
+				</svg>
+				<div class="card-paragraph-text">
+					Projected evolution of the total population under the UN medium variant scenario. The declining trend reflects long-term demographic contraction driven by low fertility and aging.
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>
+
+
