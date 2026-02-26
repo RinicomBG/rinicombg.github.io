@@ -437,16 +437,15 @@ async function handleAnchorClick(event) {
 			throw new Error(`HTTP error! Status: ${response.status}`);
 		}
 
-		const textData = await response.text(); // Get raw text
-		const jsonObject = JSON.parse(textData); // Convert to JS object
+		const textData = await response.text();
+		const jsonObject = JSON.parse(textData);
 
-		// jsonObject now contains the parsed JSON
 		console.log(jsonObject);
 
-		return jsonObject; // Optional: return for further use
+		return false;
 	} catch (error) {
 		console.error("Failed to fetch or parse JSON:", error);
-		throw error; // Fail as requested if malformed
+		throw error;
 	}
 }
 
