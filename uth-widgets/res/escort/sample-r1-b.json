@@ -1,0 +1,34 @@
+{
+	"inputs": {
+		"magnitude": 5,
+		"population": 2057000,
+		"distance_km": 29,
+		"depth_km": 6,
+		"collapse_pct": 5
+	},
+	"seismic": {
+		"hypocentral_distance_km": 21.9575306,
+		"pga_g": 0.0411057823510973,
+		"expected_injured": 1932
+	},
+	"medical": {
+		"orthopedic_patients": 1697,
+		"orthopedic_distribution": {
+			"fractures": 1068,
+			"crush_injury": 234,
+			"compartment_syndrome": 137,
+			"major_soft_tissue": 131,
+			"crush_syndrome": 127
+		},
+		"severity": {
+			"mild": 284,
+			"severe": 1149,
+			"critical": 164
+		},
+		"resources": {
+			"surgeries": 1536,
+			"icu_beds": 301,
+			"dialysis": 197
+		}
+	}
+}

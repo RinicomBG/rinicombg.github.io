@@ -67,7 +67,7 @@ function resolveUnit(key) {
 
 function resolveDecimals(key) {
 	if (key.includes("pga")) return 3;
-	if (key.includes("distance")) return 0;
+	if (key == "hypocentral_distance_km") return 1;
 	return 0;
 }
 
@@ -255,6 +255,36 @@ function buildOrthopedicPatientsCard(data) {
 	}];
 }
 
+function buildSeverityGrid(data) {
+	const { mild, severe, critical } = data.medical.severity;
+
+	const total = mild + severe + critical;
+
+	const calcPercent = (value) => 
+		total === 0 ? 0 : Math.round((value / total) * 100);
+
+	return [
+		{
+			title: "Mild",
+			main: `${mild}`,
+			progress: calcPercent(mild),
+			progress_highlight: "good"
+		},
+		{
+			title: "Severe",
+			main: `${severe}`,
+			progress: calcPercent(severe),
+			progress_highlight: "warning"
+		},
+		{
+			title: "Critical",
+			main: `${critical}`,
+			progress: calcPercent(critical),
+			progress_highlight: "danger"
+		}
+	];
+}
+
 function buildResourceCards(data) {
 	const resources = data?.medical?.resources ?? {};
 	const expectedInjured = data?.seismic?.expected_injured ?? 0;
@@ -392,11 +422,32 @@ function updateAll() {
 	resourcesCardData[2].note = undefined;
 	updateCards(medicalResourcesCards, resourcesCardData, 0);
 
-	updateSeverityGrid([
-		{ title: "Mild", main: `${sample_data.medical.severity.mild}`, progress: 47, progress_highlight: "good" },
-		{ title: "Severe", main: `${sample_data.medical.severity.severe}`, progress: 67, progress_highlight: "warning" },
-		{ title: "Critical", main: `${sample_data.medical.severity.critical}`, progress: 32, progress_highlight: "danger" }
-	]);
+	updateSeverityGrid(buildSeverityGrid(sample_data));
+}
+
+async function handleAnchorClick(event) {
+	event.preventDefault(); // Stop normal link navigation
+
+	const url = event.currentTarget.href;
+
+	try {
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! Status: ${response.status}`);
+		}
+
+		const textData = await response.text(); // Get raw text
+		const jsonObject = JSON.parse(textData); // Convert to JS object
+
+		// jsonObject now contains the parsed JSON
+		console.log(jsonObject);
+
+		return jsonObject; // Optional: return for further use
+	} catch (error) {
+		console.error("Failed to fetch or parse JSON:", error);
+		throw error; // Fail as requested if malformed
+	}
 }
 
 /*
